@@ -49,16 +49,10 @@ def generate_launch_description():
         description='Authentication token (empty = no auth)'
     )
 
-    node_name_arg = DeclareLaunchArgument(
-        'node_name',
-        default_value='roskit_bridge',
-        description='ROS2 node name for the bridge'
-    )
-
-    log_level_arg = DeclareLaunchArgument(
-        'log_level',
-        default_value='info',
-        description='Log level (trace, debug, info, warn, error)'
+    verbose_arg = DeclareLaunchArgument(
+        'verbose',
+        default_value='false',
+        description='Enable verbose logging'
     )
 
     # Get package share directory for the binary
@@ -68,8 +62,7 @@ def generate_launch_description():
     bridge_cmd = [
         PathJoinSubstitution([pkg_share, '..', '..', 'lib', 'roskit_bridge_rs', 'roskit_bridge']),
         '--port', LaunchConfiguration('port'),
-        '--host', LaunchConfiguration('host'),
-        '--node-name', LaunchConfiguration('node_name'),
+        '-H', LaunchConfiguration('host'),
     ]
 
     # Launch the bridge process
@@ -78,9 +71,6 @@ def generate_launch_description():
         name='roskit_bridge',
         output='screen',
         emulate_tty=True,
-        env={
-            'RUST_LOG': LaunchConfiguration('log_level'),
-        }
     )
 
     return LaunchDescription([
@@ -90,8 +80,7 @@ def generate_launch_description():
         tls_cert_arg,
         tls_key_arg,
         auth_token_arg,
-        node_name_arg,
-        log_level_arg,
+        verbose_arg,
 
         # Log startup info
         LogInfo(msg=['Starting RosKit Bridge on port ', LaunchConfiguration('port')]),

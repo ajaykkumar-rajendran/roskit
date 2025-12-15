@@ -23,17 +23,24 @@ rustls = "0.23"
 rustls-pemfile = "2.1"
 
 # ROS2 bindings - using rclrs (official ROS2 Rust client)
-# rclrs is typically built via colcon with ros2_rust
-# For standalone builds, we use a feature flag
+# These packages are NOT on crates.io - they must come from a ros2_rust workspace
+# When building with ros2 feature, you must:
+# 1. Clone ros2_rust: git clone https://github.com/ros2-rust/ros2_rust.git
+# 2. Source ROS2: source /opt/ros/humble/setup.bash
+# 3. Build with colcon: colcon build
+# 4. Source the workspace: source install/setup.bash
+# 5. Then cargo will find the packages
+#
+# For standalone builds without ROS2, omit --features ros2
 rclrs = { version = "0.4", optional = true }
 rosidl_runtime_rs = { version = "0.4", optional = true }
 
-# Standard ROS2 message types (when using rclrs)
-std_msgs = { version = "5", optional = true }
-geometry_msgs = { version = "5", optional = true }
-sensor_msgs = { version = "5", optional = true }
-nav_msgs = { version = "5", optional = true }
-std_srvs = { version = "5", optional = true }
+# Standard ROS2 message types - sourced from ros2_rust workspace (not crates.io)
+std_msgs = { version = "4", optional = true }
+geometry_msgs = { version = "4", optional = true }
+sensor_msgs = { version = "4", optional = true }
+nav_msgs = { version = "4", optional = true }
+std_srvs = { version = "4", optional = true }
 
 # Serialization
 ciborium = "0.2"  # CBOR encoding

@@ -1,0 +1,31 @@
+{
+  "name": "roskit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "High-performance web bridge and SDK for ROS2 - The complete robotics toolkit",
+  "workspaces": [
+    "packages/*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/roskit/roskit.git"
+  },
+  "author": "RosKit Contributors",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "build:client": "npm run build --workspace=@roskit/client",
+    "build:react": "npm run build --workspace=@roskit/react",
+    "dev": "npm run dev --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present && rm -rf node_modules",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}

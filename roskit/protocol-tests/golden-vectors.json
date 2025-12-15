@@ -1,0 +1,385 @@
+{
+  "$schema": "./schema.json",
+  "version": "1.0.0",
+  "description": "RosKit Protocol Golden Test Vectors - Cross-runtime conformance tests",
+  "protocol": {
+    "magic": [82, 75],
+    "magic_string": "RK",
+    "version": 1,
+    "header_size": 24
+  },
+  "message_types": {
+    "SUBSCRIBE": "0x01",
+    "UNSUBSCRIBE": "0x02",
+    "PUBLISH": "0x03",
+    "SERVICE_CALL": "0x04",
+    "TOPIC_LIST": "0x05",
+    "PING": "0x06",
+    "SERVICE_LIST": "0x07",
+    "NODE_LIST": "0x08",
+    "MESSAGE": "0x10",
+    "CHANNEL_INFO": "0x11",
+    "SERVICE_RESPONSE": "0x12",
+    "TOPIC_LIST_RESPONSE": "0x13",
+    "SERVER_INFO": "0x14",
+    "PONG": "0x15",
+    "SERVICE_LIST_RESPONSE": "0x16",
+    "NODE_LIST_RESPONSE": "0x17",
+    "ERROR": "0xFF"
+  },
+  "encodings": {
+    "RAW": "0x00",
+    "CBOR": "0x01",
+    "JSON": "0x02",
+    "PNG": "0x03",
+    "JPEG": "0x04",
+    "BINARY": "0x05"
+  },
+  "flags": {
+    "NONE": "0x00",
+    "COMPRESSED": "0x01",
+    "FRAGMENTED": "0x02",
+    "LAST_FRAGMENT": "0x04"
+  },
+  "test_vectors": [
+    {
+      "name": "empty_ping",
+      "description": "PING message with no payload",
+      "header": {
+        "message_type": "0x06",
+        "channel_id": 0,
+        "timestamp_ns": 0,
+        "encoding": "0x00",
+        "flags": "0x00",
+        "payload_length": 0
+      },
+      "payload_hex": "",
+      "expected_hex": "524b01060000000000000000000000000000000000000000"
+    },
+    {
+      "name": "empty_pong",
+      "description": "PONG message with no payload",
+      "header": {
+        "message_type": "0x15",
+        "channel_id": 0,
+        "timestamp_ns": 0,
+        "encoding": "0x00",
+        "flags": "0x00",
+        "payload_length": 0
+      },
+      "payload_hex": "",
+      "expected_hex": "524b01150000000000000000000000000000000000000000"
+    },
+    {
+      "name": "topic_list_request",
+      "description": "TOPIC_LIST request with no payload",
+      "header": {
+        "message_type": "0x05",
+        "channel_id": 0,
+        "timestamp_ns": 0,
+        "encoding": "0x00",
+        "flags": "0x00",
+        "payload_length": 0
+      },
+      "payload_hex": "",
+      "expected_hex": "524b01050000000000000000000000000000000000000000"
+    },
+    {
+      "name": "service_list_request",
+      "description": "SERVICE_LIST request with no payload",
+      "header": {
+        "message_type": "0x07",
+        "channel_id": 0,
+        "timestamp_ns": 0,
+        "encoding": "0x00",
+        "flags": "0x00",
+        "payload_length": 0
+      },
+      "payload_hex": "",
+      "expected_hex": "524b01070000000000000000000000000000000000000000"
+    },
+    {
+      "name": "node_list_request",
+      "description": "NODE_LIST request with no payload",
+      "header": {
+        "message_type": "0x08",
+        "channel_id": 0,
+        "timestamp_ns": 0,
+        "encoding": "0x00",
+        "flags": "0x00",
+        "payload_length": 0
+      },
+      "payload_hex": "",
+      "expected_hex": "524b01080000000000000000000000000000000000000000"
+    },
+    {
+      "name": "message_with_channel",
+      "description": "MESSAGE on channel 42 with empty CBOR payload",
+      "header": {
+        "message_type": "0x10",
+        "channel_id": 42,
+        "timestamp_ns": 1000000000,
+        "encoding": "0x01",
+        "flags": "0x00",
+        "payload_length": 1
+      },
+      "payload_hex": "f6",
+      "payload_cbor_decoded": null,
+      "expected_hex": "524b01100000002a000000003b9aca000100000000000001f6"
+    },
+    {
+      "name": "subscribe_request",
+      "description": "SUBSCRIBE request for /scan topic",
+      "header": {
+        "message_type": "0x01",
+        "channel_id": 0,
+        "timestamp_ns": 0,
+        "encoding": "0x01",
+        "flags": "0x00",
+        "payload_length": 13
+      },
+      "payload_cbor": {"topic": "/scan"},
+      "payload_hex": "a165746f706963652f7363616e",
+      "expected_hex": "524b0101000000000000000000000000010000000000000da165746f706963652f7363616e"
+    },
+    {
+      "name": "unsubscribe_request",
+      "description": "UNSUBSCRIBE request for channel 5",
+      "header": {
+        "message_type": "0x02",
+        "channel_id": 5,
+        "timestamp_ns": 0,
+        "encoding": "0x01",
+        "flags": "0x00",
+        "payload_length": 13
+      },
+      "payload_cbor": {"channel_id": 5},
+      "payload_hex": "a16a6368616e6e656c5f696405",
+      "expected_hex": "524b0102000000050000000000000000010000000000000da16a6368616e6e656c5f696405"
+    },
+    {
+      "name": "channel_info_response",
+      "description": "CHANNEL_INFO response for /scan subscription",
+      "header": {
+        "message_type": "0x11",
+        "channel_id": 1,
+        "timestamp_ns": 0,
+        "encoding": "0x01",
+        "flags": "0x00",
+        "payload_length": 73
+      },
+      "payload_cbor": {
+        "channel_id": 1,
+        "topic": "/scan",
+        "msg_type": "sensor_msgs/msg/LaserScan",
+        "encoding": "cbor"
+      }
+    },
+    {
+      "name": "error_response",
+      "description": "ERROR message with error string",
+      "header": {
+        "message_type": "0xFF",
+        "channel_id": 0,
+        "timestamp_ns": 0,
+        "encoding": "0x01",
+        "flags": "0x00",
+        "payload_length": 24
+      },
+      "payload_cbor": {"error": "Topic not found"}
+    },
+    {
+      "name": "large_channel_id",
+      "description": "MESSAGE with max channel ID (2^32-1)",
+      "header": {
+        "message_type": "0x10",
+        "channel_id": 4294967295,
+        "timestamp_ns": 0,
+        "encoding": "0x00",
+        "flags": "0x00",
+        "payload_length": 0
+      },
+      "payload_hex": "",
+      "expected_hex": "524b0110ffffffff00000000000000000000000000000000"
+    },
+    {
+      "name": "large_timestamp",
+      "description": "MESSAGE with large timestamp (max u64)",
+      "header": {
+        "message_type": "0x10",
+        "channel_id": 1,
+        "timestamp_ns": 18446744073709551615,
+        "encoding": "0x00",
+        "flags": "0x00",
+        "payload_length": 0
+      },
+      "payload_hex": ""
+    },
+    {
+      "name": "png_image_message",
+      "description": "MESSAGE with PNG-encoded image (1x1 red pixel)",
+      "header": {
+        "message_type": "0x10",
+        "channel_id": 10,
+        "timestamp_ns": 1700000000000000000,
+        "encoding": "0x03",
+        "flags": "0x00",
+        "payload_length": 67
+      },
+      "payload_description": "Minimal 1x1 red PNG image",
+      "payload_hex": "89504e470d0a1a0a0000000d49484452000000010000000108020000009058b1eb0000000c49444154789c636060f80f00010401006baf3e2a0000000049454e44ae426082",
+      "expected_hex": "524b01100000000a17948b88a18400000300000000000043894504e470d0a1a0a0000000d49484452000000010000000108020000009058b1eb0000000c49444154789c636060f80f00010401006baf3e2a0000000049454e44ae426082"
+    },
+    {
+      "name": "jpeg_image_message",
+      "description": "MESSAGE with JPEG-encoded image (1x1 red pixel)",
+      "header": {
+        "message_type": "0x10",
+        "channel_id": 11,
+        "timestamp_ns": 1700000000000000000,
+        "encoding": "0x04",
+        "flags": "0x00",
+        "payload_length": 134
+      },
+      "payload_description": "Minimal 1x1 red JPEG image",
+      "payload_hex": "ffd8ffe000104a46494600010100000100010000ffdb004300080606070605080707070909080a0c140d0c0b0b0c1912130f141d1a1f1e1d1a1c1c20242e2720222c231c1c2837292c30313434341f27393d38323c2e333432ffc0000b080001000101011100ffc4001f0000010501010101010100000000000000000102030405060708090a0bffc40034100001040301020303020500030102010001020311041221313241051461072271136181910832a1b14252c1f0d16333e1ffd9",
+      "expected_hex": "524b01100000000b17948b88a18400000400000000000086ffd8ffe000104a46494600010100000100010000ffdb004300080606070605080707070909080a0c140d0c0b0b0c1912130f141d1a1f1e1d1a1c1c20242e2720222c231c1c2837292c30313434341f27393d38323c2e333432ffc0000b080001000101011100ffc4001f0000010501010101010100000000000000000102030405060708090a0bffc40034100001040301020303020500030102010001020311041221313241051461072271136181910832a1b14252c1f0d16333e1ffd9"
+    },
+    {
+      "name": "laser_scan_cbor",
+      "description": "MESSAGE with CBOR-encoded LaserScan data",
+      "header": {
+        "message_type": "0x10",
+        "channel_id": 20,
+        "timestamp_ns": 1700000000000000000,
+        "encoding": "0x01",
+        "flags": "0x00",
+        "payload_length": 150
+      },
+      "payload_description": "LaserScan with 5 ranges and intensities",
+      "payload_cbor": {
+        "header": {
+          "stamp": {"sec": 1700000000, "nanosec": 0},
+          "frame_id": "laser"
+        },
+        "angle_min": -1.5707963,
+        "angle_max": 1.5707963,
+        "angle_increment": 0.7853981,
+        "time_increment": 0.0,
+        "scan_time": 0.1,
+        "range_min": 0.1,
+        "range_max": 30.0,
+        "ranges": [1.0, 2.0, 3.0, 4.0, 5.0],
+        "intensities": [100.0, 200.0, 300.0, 400.0, 500.0]
+      }
+    },
+    {
+      "name": "occupancy_grid_cbor",
+      "description": "MESSAGE with CBOR-encoded OccupancyGrid (2x2 map)",
+      "header": {
+        "message_type": "0x10",
+        "channel_id": 21,
+        "timestamp_ns": 1700000000000000000,
+        "encoding": "0x01",
+        "flags": "0x00",
+        "payload_length": 200
+      },
+      "payload_description": "2x2 OccupancyGrid with resolution 0.05m",
+      "payload_cbor": {
+        "header": {
+          "stamp": {"sec": 1700000000, "nanosec": 0},
+          "frame_id": "map"
+        },
+        "info": {
+          "map_load_time": {"sec": 1700000000, "nanosec": 0},
+          "resolution": 0.05,
+          "width": 2,
+          "height": 2,
+          "origin": {
+            "position": {"x": 0.0, "y": 0.0, "z": 0.0},
+            "orientation": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}
+          }
+        },
+        "data": [0, 100, -1, 50]
+      }
+    },
+    {
+      "name": "compressed_image_cbor",
+      "description": "MESSAGE with CBOR-wrapped CompressedImage",
+      "header": {
+        "message_type": "0x10",
+        "channel_id": 30,
+        "timestamp_ns": 1700000000000000000,
+        "encoding": "0x01",
+        "flags": "0x00",
+        "payload_length": 120
+      },
+      "payload_description": "CompressedImage with format and small data",
+      "payload_cbor": {
+        "header": {
+          "stamp": {"sec": 1700000000, "nanosec": 0},
+          "frame_id": "camera"
+        },
+        "format": "jpeg",
+        "data": "base64:ffd8ffe0..."
+      }
+    },
+    {
+      "name": "point_cloud_cbor",
+      "description": "MESSAGE with CBOR-encoded PointCloud2 data",
+      "header": {
+        "message_type": "0x10",
+        "channel_id": 22,
+        "timestamp_ns": 1700000000000000000,
+        "encoding": "0x01",
+        "flags": "0x00",
+        "payload_length": 180
+      },
+      "payload_description": "PointCloud2 with XYZ fields (3 points)",
+      "payload_cbor": {
+        "header": {
+          "stamp": {"sec": 1700000000, "nanosec": 0},
+          "frame_id": "lidar"
+        },
+        "height": 1,
+        "width": 3,
+        "fields": [
+          {"name": "x", "offset": 0, "datatype": 7, "count": 1},
+          {"name": "y", "offset": 4, "datatype": 7, "count": 1},
+          {"name": "z", "offset": 8, "datatype": 7, "count": 1}
+        ],
+        "is_bigendian": false,
+        "point_step": 12,
+        "row_step": 36,
+        "is_dense": true,
+        "data": "base64:AAAAAEAAAABAAAAAA..."
+      }
+    }
+  ],
+  "invalid_vectors": [
+    {
+      "name": "wrong_magic",
+      "description": "Message with incorrect magic bytes (RW instead of RK)",
+      "hex": "52570106000000000000000000000000000000000000000000",
+      "error": "InvalidMagic"
+    },
+    {
+      "name": "wrong_version",
+      "description": "Message with unsupported protocol version (2)",
+      "hex": "524b0206000000000000000000000000000000000000000000",
+      "error": "InvalidVersion"
+    },
+    {
+      "name": "truncated_header",
+      "description": "Message with incomplete header (only 10 bytes)",
+      "hex": "524b01060000000000",
+      "error": "MessageTooShort"
+    },
+    {
+      "name": "invalid_message_type",
+      "description": "Message with unknown message type (0xAA)",
+      "hex": "524b01aa000000000000000000000000000000000000000000",
+      "error": "InvalidMessageType"
+    }
+  ]
+}

@@ -1,0 +1,255 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # TypeScript Client Tests
+  typescript-client:
+    name: TypeScript Client
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install
+        working-directory: ./
+
+      - name: Typecheck
+        run: pnpm --filter @roskit/client typecheck
+        working-directory: ./
+
+      - name: Build
+        run: pnpm --filter @roskit/client build
+        working-directory: ./
+
+      - name: Run tests (including happy-dom media tests)
+        run: pnpm --filter @roskit/client test
+        working-directory: ./
+
+      - name: Run conformance tests
+        run: pnpm --filter @roskit/client test:conformance
+        working-directory: ./
+
+  # TypeScript React Package Tests
+  typescript-react:
+    name: TypeScript React Hooks
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install
+        working-directory: ./
+
+      - name: Typecheck
+        run: pnpm --filter @roskit/react typecheck
+        working-directory: ./
+
+      - name: Build
+        run: pnpm --filter @roskit/react build
+        working-directory: ./
+
+      - name: Run tests
+        run: pnpm --filter @roskit/react test
+        working-directory: ./
+
+  # Python Bridge Tests
+  python-bridge:
+    name: Python Bridge
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest cbor2 pillow
+        working-directory: ./bridge/python/roskit_bridge
+
+      - name: Run golden conformance tests
+        run: pytest tests/test_golden_conformance.py -v
+        working-directory: ./bridge/python/roskit_bridge
+
+      - name: Run cache TTL tests
+        run: pytest tests/test_cache.py -v
+        working-directory: ./bridge/python/roskit_bridge
+
+      - name: Run media round-trip tests
+        run: pytest tests/test_media_roundtrip.py -v
+        working-directory: ./bridge/python/roskit_bridge
+
+      - name: Run TLS/auth tests
+        run: pytest tests/test_tls_auth.py -v
+        working-directory: ./bridge/python/roskit_bridge
+
+  # Rust Bridge Tests
+  rust-bridge:
+    name: Rust Bridge
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            bridge/rust/roskit-bridge-rs/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run protocol integration tests
+        run: cargo test --test protocol_integration
+        working-directory: ./bridge/rust/roskit-bridge-rs
+
+      - name: Run golden conformance tests
+        run: cargo test --test golden_conformance
+        working-directory: ./bridge/rust/roskit-bridge-rs
+
+      - name: Run media round-trip tests
+        run: cargo test --test media_roundtrip
+        working-directory: ./bridge/rust/roskit-bridge-rs
+
+      - name: Run TLS/auth integration tests
+        run: cargo test --test tls_auth_integration
+        working-directory: ./bridge/rust/roskit-bridge-rs
+
+      - name: Run resource cleanup tests
+        run: cargo test --test resource_cleanup
+        working-directory: ./bridge/rust/roskit-bridge-rs
+
+  # Cross-Runtime Protocol Conformance
+  protocol-conformance:
+    name: Protocol Conformance
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Node dependencies
+        run: pnpm install
+        working-directory: ./
+
+      - name: Install Python dependencies
+        run: |
+          pip install cbor2
+
+      - name: Run TypeScript conformance
+        run: npx tsx protocol-tests/conformance.test.ts
+        working-directory: ./
+
+      - name: Run Python conformance
+        run: python protocol-tests/conformance_test.py
+        working-directory: ./
+
+      - name: Run Rust conformance
+        run: |
+          cd protocol-tests
+          rustc conformance_test.rs -o conformance_test --edition 2021
+          ./conformance_test
+        working-directory: ./
+
+  # Lint and Format
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install
+        working-directory: ./
+
+      - name: Lint TypeScript packages
+        run: |
+          pnpm --filter @roskit/client lint || true
+          pnpm --filter @roskit/react lint || true
+        working-directory: ./
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Rust format check
+        run: cargo fmt --check
+        working-directory: ./bridge/rust/roskit-bridge-rs
+        continue-on-error: true
+
+      - name: Rust clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+        working-directory: ./bridge/rust/roskit-bridge-rs
+        continue-on-error: true

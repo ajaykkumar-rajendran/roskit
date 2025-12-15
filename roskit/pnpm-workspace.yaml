@@ -1,0 +1,7 @@
+packages:
+  # TypeScript packages
+  - 'packages/client'
+  - 'packages/react'
+
+  # Example applications
+  - 'apps/*'

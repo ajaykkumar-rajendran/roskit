@@ -1,0 +1,30 @@
+# RosKit Bridge Configuration
+# Copy and modify this file for your deployment
+
+roskit_bridge:
+  ros__parameters:
+    # WebSocket server settings
+    port: 9090
+    host: "0.0.0.0"
+
+    # TLS settings (leave empty to disable)
+    tls_cert: ""
+    tls_key: ""
+
+    # Authentication (leave empty to disable)
+    auth_token: ""
+
+    # Performance tuning
+    max_connections: 100
+    message_queue_size: 1000
+
+    # Default throttle rates (ms) for high-frequency topics
+    throttle_defaults:
+      sensor_msgs/msg/LaserScan: 100
+      sensor_msgs/msg/Image: 33
+      sensor_msgs/msg/CompressedImage: 33
+      nav_msgs/msg/OccupancyGrid: 1000
+      tf2_msgs/msg/TFMessage: 50
+
+    # Logging
+    log_level: "info"

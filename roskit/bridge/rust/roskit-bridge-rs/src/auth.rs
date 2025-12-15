@@ -3,7 +3,6 @@
 //! Provides simple token-based authentication for WebSocket connections.
 
 use std::collections::HashSet;
-use std::sync::Arc;
 use parking_lot::RwLock;
 use tracing::{debug, warn};
 

@@ -26,12 +26,12 @@ pub struct RosMessage {
 
 /// Command sent to the ROS2 thread
 #[derive(Debug)]
+#[allow(dead_code)]
 enum Ros2Command {
     Subscribe {
         channel_id: u32,
         topic: String,
         msg_type: String,
-        #[allow(dead_code)]
         throttle_ms: Option<u32>,
         response_tx: Sender<Result<(), String>>,
     },
@@ -40,19 +40,14 @@ enum Ros2Command {
     },
     Publish {
         topic: String,
-        #[allow(dead_code)]
         msg_type: String,
-        #[allow(dead_code)]
         data: JsonValue,
         response_tx: Sender<Result<(), String>>,
     },
     ServiceCall {
         service: String,
-        #[allow(dead_code)]
         service_type: String,
-        #[allow(dead_code)]
         request: JsonValue,
-        #[allow(dead_code)]
         timeout: Duration,
         response_tx: Sender<Result<JsonValue, String>>,
     },

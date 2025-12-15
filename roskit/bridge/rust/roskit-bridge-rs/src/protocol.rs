@@ -44,7 +44,7 @@ pub enum MessageType {
 impl TryFrom<u8> for MessageType {
     type Error = ProtocolError;
 
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
+    fn try_from(value: u8) -> Result<Self, ProtocolError> {
         match value {
             0x01 => Ok(MessageType::Subscribe),
             0x02 => Ok(MessageType::Unsubscribe),

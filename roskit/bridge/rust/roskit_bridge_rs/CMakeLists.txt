@@ -43,11 +43,9 @@ if(BUILD_RUST_FROM_SOURCE)
     RENAME roskit_bridge
   )
 else()
-  # Use pre-built binary from scripts directory
-  install(
-    PROGRAMS scripts/roskit_bridge
-    DESTINATION lib/${PROJECT_NAME}
-  )
+  # When BUILD_RUST_FROM_SOURCE=OFF, the install script handles binary installation
+  # Just create an empty marker so colcon succeeds
+  message(STATUS "BUILD_RUST_FROM_SOURCE=OFF: Binary will be installed by install.sh script")
 endif()
 
 # Install launch files

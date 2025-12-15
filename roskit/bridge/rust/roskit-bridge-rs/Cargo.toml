@@ -22,25 +22,10 @@ tokio-rustls = "0.26"
 rustls = "0.23"
 rustls-pemfile = "2.1"
 
-# ROS2 bindings - using rclrs (official ROS2 Rust client)
-# These packages are NOT on crates.io - they must come from a ros2_rust workspace
-# When building with ros2 feature, you must:
-# 1. Clone ros2_rust: git clone https://github.com/ros2-rust/ros2_rust.git
-# 2. Source ROS2: source /opt/ros/humble/setup.bash
-# 3. Build with colcon: colcon build
-# 4. Source the workspace: source install/setup.bash
-# 5. Then cargo will find the packages
-#
-# For standalone builds without ROS2, omit --features ros2
-rclrs = { version = "0.4", optional = true }
-rosidl_runtime_rs = { version = "0.4", optional = true }
-
-# Standard ROS2 message types - sourced from ros2_rust workspace (not crates.io)
-std_msgs = { version = "4", optional = true }
-geometry_msgs = { version = "4", optional = true }
-sensor_msgs = { version = "4", optional = true }
-nav_msgs = { version = "4", optional = true }
-std_srvs = { version = "4", optional = true }
+# ROS2 bindings - NOT INCLUDED BY DEFAULT
+# The ros2 feature is a placeholder. To build with ROS2 support:
+# 1. Set up ros2_rust workspace separately
+# 2. The ros2.rs module has stub implementations when ros2 feature is disabled
 
 # Serialization
 ciborium = "0.2"  # CBOR encoding
@@ -61,8 +46,9 @@ crossbeam-channel = "0.5"
 
 [features]
 default = []
-# Enable ROS2 integration via rclrs (requires ros2_rust workspace)
-ros2 = ["rclrs", "rosidl_runtime_rs", "std_msgs", "geometry_msgs", "sensor_msgs", "nav_msgs", "std_srvs"]
+# The ros2 feature is a marker only - actual ROS2 deps come from ros2_rust workspace
+# This feature enables conditional compilation in ros2.rs
+ros2 = []
 
 [dev-dependencies]
 hex = "0.4"

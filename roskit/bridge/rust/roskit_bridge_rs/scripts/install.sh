@@ -54,42 +54,17 @@ check_rust() {
     echo_info "Rust $(rustc --version) detected"
 }
 
-# Check if ros2_rust is available
-check_ros2_rust() {
-    # Check if rclrs is available in the environment
-    if cargo search rclrs 2>/dev/null | grep -q "rclrs" || [ -n "$AMENT_PREFIX_PATH" ]; then
-        return 0
-    fi
-    return 1
-}
-
 # Build Rust binary
 build_rust() {
+    echo_info "Building roskit-bridge (release mode)..."
     cd "$RUST_SOURCE_DIR"
-
-    # Try to build with ros2 feature if ros2_rust workspace is available
-    if check_ros2_rust; then
-        echo_info "ros2_rust workspace detected, building with ROS2 integration..."
-        if cargo build --release --features ros2 2>/dev/null; then
-            echo_info "Build complete with ROS2 support: $RUST_SOURCE_DIR/target/release/roskit-bridge"
-            return 0
-        fi
-        echo_warn "Failed to build with ros2 feature, falling back to stub mode..."
-    fi
-
-    # Build without ros2 feature (stub mode)
-    echo_info "Building roskit-bridge (release mode, stub mode - no ROS2 integration)..."
     cargo build --release
-    echo_info "Build complete (stub mode): $RUST_SOURCE_DIR/target/release/roskit-bridge"
-    echo_warn ""
-    echo_warn "NOTE: Built without ROS2 integration (stub mode)."
-    echo_warn "To enable ROS2 support, you need to set up ros2_rust:"
-    echo_warn "  1. git clone https://github.com/ros2-rust/ros2_rust.git ~/ros2_rust_ws/src/ros2_rust"
-    echo_warn "  2. cd ~/ros2_rust_ws && source /opt/ros/humble/setup.bash"
-    echo_warn "  3. colcon build"
-    echo_warn "  4. source ~/ros2_rust_ws/install/setup.bash"
-    echo_warn "  5. Re-run this install script"
-    echo_warn ""
+    echo_info "Build complete: $RUST_SOURCE_DIR/target/release/roskit-bridge"
+    echo_info ""
+    echo_info "NOTE: The Rust bridge runs in WebSocket-only mode."
+    echo_info "ROS2 operations are stubbed and will return errors."
+    echo_info "For full ROS2 support, use the Python bridge (roskit_bridge)."
+    echo_info ""
 }
 
 # Install to ROS2 workspace using colcon

@@ -11,7 +11,7 @@ categories = ["science::robotics", "network-programming"]
 
 [dependencies]
 # Async runtime
-tokio = { version = "1.40", features = ["full"] }
+tokio = { version = "1.40", features = ["full", "sync"] }
 
 # WebSocket
 tokio-tungstenite = { version = "0.24", features = ["rustls-tls-native-roots"] }
@@ -22,8 +22,18 @@ tokio-rustls = "0.26"
 rustls = "0.23"
 rustls-pemfile = "2.1"
 
-# ROS2 bindings (using r2r for better stability)
-r2r = "0.9"
+# ROS2 bindings - using rclrs (official ROS2 Rust client)
+# rclrs is typically built via colcon with ros2_rust
+# For standalone builds, we use a feature flag
+rclrs = { version = "0.4", optional = true }
+rosidl_runtime_rs = { version = "0.4", optional = true }
+
+# Standard ROS2 message types (when using rclrs)
+std_msgs = { version = "5", optional = true }
+geometry_msgs = { version = "5", optional = true }
+sensor_msgs = { version = "5", optional = true }
+nav_msgs = { version = "5", optional = true }
+std_srvs = { version = "5", optional = true }
 
 # Serialization
 ciborium = "0.2"  # CBOR encoding
@@ -40,6 +50,12 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 clap = { version = "4.5", features = ["derive"] }
 parking_lot = "0.12"
+crossbeam-channel = "0.5"
+
+[features]
+default = []
+# Enable ROS2 integration via rclrs (requires ros2_rust workspace)
+ros2 = ["rclrs", "rosidl_runtime_rs", "std_msgs", "geometry_msgs", "sensor_msgs", "nav_msgs", "std_srvs"]
 
 [dev-dependencies]
 hex = "0.4"

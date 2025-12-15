@@ -56,9 +56,9 @@ check_rust() {
 
 # Build Rust binary
 build_rust() {
-    echo_info "Building roskit-bridge (release mode)..."
+    echo_info "Building roskit-bridge (release mode with ros2 feature)..."
     cd "$RUST_SOURCE_DIR"
-    cargo build --release
+    cargo build --release --features ros2
     echo_info "Build complete: $RUST_SOURCE_DIR/target/release/roskit-bridge"
 }
 

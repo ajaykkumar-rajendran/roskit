@@ -216,17 +216,8 @@ impl Server {
             info!("Authentication is enabled");
         }
 
-        // Start ROS2 spin on a dedicated thread (r2r types are not Send)
-        let ros2_ctx = Arc::clone(&self.ros2_context);
-        std::thread::spawn(move || {
-            let rt = tokio::runtime::Builder::new_current_thread()
-                .enable_all()
-                .build()
-                .expect("Failed to create ROS2 runtime");
-            rt.block_on(async move {
-                ros2_ctx.spin().await;
-            });
-        });
+        // ROS2 context now manages its own dedicated thread internally
+        // No need to spawn a separate thread here
 
         let mut shutdown_rx = self.shutdown_tx.subscribe();
 
@@ -365,8 +356,19 @@ impl Server {
         let max_queue = self.config.max_queue_size;
         let (tx, mut rx) = mpsc::channel::<WsMessage>(max_queue);
 
-        // Channel for ROS messages
+        // Channel for ROS messages - bridge from crossbeam to tokio
         let (ros_tx, mut ros_rx) = mpsc::channel::<RosMessage>(max_queue);
+
+        // Spawn a task to forward ROS2 messages from crossbeam channel to tokio channel
+        let ros2_message_rx = self.ros2_context.message_receiver();
+        let ros2_forwarder = tokio::task::spawn_blocking(move || {
+            while let Ok(msg) = ros2_message_rx.recv() {
+                if ros_tx.blocking_send(msg).is_err() {
+                    // Channel closed, stop forwarding
+                    break;
+                }
+            }
+        });
 
         // Heartbeat interval setup
         let heartbeat_interval = if self.config.heartbeat_interval_secs > 0 {
@@ -465,7 +467,7 @@ impl Server {
                             }
 
                             if let Err(e) = self
-                                .handle_message(&data, &client_state, &tx, &ros_tx, &rate_limiters)
+                                .handle_message(&data, &client_state, &tx, &rate_limiters)
                                 .await
                             {
                                 warn!("Error handling message from {}: {}", addr, e);
@@ -519,8 +521,8 @@ impl Server {
 
         // Cleanup: drop sender channels to stop sender task
         drop(tx);
-        drop(ros_tx);
         let _ = sender_handle.await;
+        ros2_forwarder.abort();
 
         // Cleanup client channels - unsubscribe from ROS topics
         let channels = client_state.channels.read();
@@ -540,7 +542,6 @@ impl Server {
         data: &[u8],
         client_state: &Arc<ClientState>,
         ws_sender: &mpsc::Sender<WsMessage>,
-        ros_sender: &mpsc::Sender<RosMessage>,
         rate_limiters: &ClientRateLimiters,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let message = Message::parse(data)?;
@@ -553,7 +554,7 @@ impl Server {
                     Self::send_error_to(ws_sender, "Rate limit exceeded for subscribe").await?;
                     return Ok(());
                 }
-                self.handle_subscribe(&message, client_state, ws_sender, ros_sender)
+                self.handle_subscribe(&message, client_state, ws_sender)
                     .await?;
             }
             MessageType::Unsubscribe => {
@@ -609,7 +610,6 @@ impl Server {
         message: &Message,
         client_state: &Arc<ClientState>,
         ws_sender: &mpsc::Sender<WsMessage>,
-        ros_sender: &mpsc::Sender<RosMessage>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let request: SubscribeRequest = decode_cbor(&message.payload)?;
         info!("Subscribe request for topic: {}", request.topic);
@@ -654,7 +654,6 @@ impl Server {
                 &request.topic,
                 &msg_type,
                 request.throttle_ms,
-                ros_sender.clone(),
             )
             .await
         {
